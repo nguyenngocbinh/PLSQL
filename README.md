@@ -164,6 +164,14 @@ ON search_condition
         INSERT (col1,col2,...)
         values(value1,value2,...)
         WHERE <insert_condition>;
+
+# Eg
+MERGE INTO SB_BI.B_SAO_KE_BY_DATE X
+      USING SB_BI.B_CUSTOMER_BY_DATE Y
+      ON (X.CUSTOMER_CODE = Y.CUSTOMER)
+      WHEN MATCHED THEN
+        UPDATE
+           SET X.SHORT_NAME = Y.SHORT_NAME;
 ```
 
 # TIPS & TRICKS
