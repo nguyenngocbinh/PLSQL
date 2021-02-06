@@ -319,6 +319,23 @@ BEGIN
 END;
 /
 ```
+
+```{}
+BEGIN
+  FOR r_product IN (
+        SELECT 
+            product_name, list_price 
+        FROM 
+            products
+        ORDER BY list_price DESC
+    )
+  LOOP
+     dbms_output.put_line( r_product.product_name ||
+        ': $' || 
+        r_product.list_price );
+  END LOOP;
+END;
+```
 ## PIVOT
 ```{}
 SELECT * FROM
