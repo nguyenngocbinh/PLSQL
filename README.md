@@ -1,11 +1,11 @@
 # OBIEE
 
-```{}
+```sql
 where A.INPUTTER in (@{P_INPUTTER}{''})
 and A.DAYID BETWEEN @{P_FROM_DATE}{''} AND @{P_TO_DATE}{''};
 ```
 
-```{}
+```sql
 -- Gõ nhiều mã vào prompt filter
 WITH tmp_tab AS
  (SELECT upper(regexp_replace(regexp_substr('@{P_POS}', ',*[^,]+', 1, LEVEL), ',| ', '')) all_values
@@ -17,7 +17,7 @@ SELECT * FROM SB_BI.B_TID_ERROR_DAILY_OBIEE
 ```
 
 ## PROMPT
-```{}
+```sql
 Server Variable: SYSDATE_RPD
 ```
 
@@ -30,7 +30,7 @@ nls_lang=AMERICAN_AMERICA.AL32UTF8
 # NHỮNG LỆNH CƠ BẢN
 
 ## CREATE
-```{}
+```sql
 CREATE TABLE employees
 ( employee_number number(10) NOT NULL,
   employee_name varchar2(50) NOT NULL,
@@ -50,7 +50,7 @@ CREATE TABLE suppliers
 
 ## DROP
 
-```{}
+```sql
 DROP TABLE customers PURGE;
 
 SELECT * FROM USER_RECYCLEBIN; -- danh sach bang trong thung rac
@@ -59,7 +59,7 @@ PURGE RECYCLEBIN; -- xoa het bang trong thung rac
 ```
 
 ## INSERT INTO
-```{}
+```sql
 INSERT INTO sinh_vien VALUES ("Trinh Giao Kim","Nam","44","Bac Lieu");
 
 INSERT INTO sinh_vien (Full_name, Gender, Age, City)
@@ -71,7 +71,7 @@ Note: Nếu trường NOT NULL thì tự thêm giá trị mặc định
 ## SELECT 
 
 ### Cơ bản
-```{}
+```sql
 SELECT *
 FROM sinh_vien
 WHERE Gender="Nam" AND Age<=35
@@ -80,20 +80,20 @@ ORDER BY Gender DESC, Age ASC;
 
 ### Chọn hàng có giá trị khác nhau
 
-```{}
+```sql
 SELECT DISTINCT Age, Gender
 FROM sinh_vien;
 ```
 
 ### Giới hạn số lượng dòng
-```{}
+```sql
 SELECT *
 FROM sinh_vien
 LIMIT 3;
 ```
 
 ### LIKE 
-```{}
+```sql
 -- Chọn sinh viên bắt đầu bằng chữ Nguyen
 SELECT *
 FROM sinh_vien
@@ -106,7 +106,7 @@ WHERE Full_name LIKE "%T%T%";
 ```
 
 ## DELETE
-```{}
+```sql
 DELETE FROM sinh_vien
 WHERE Gender = "Nam";
 
@@ -114,14 +114,14 @@ Note: Nếu không có WHERE thì xóa hết dữ liệu trong bảng
 ```
 
 ## UPDATE Cập nhật dữ liệu trong bảng 
-```{}
+```sql
 UPDATE table_name
 SET column_name1=value1, column_name2=value2
 WHERE column_name=value;
 ```
 
 ## JOIN
-```{}
+```sql
 SELECT columns
 FROM table1 
 INNER JOIN table2
@@ -131,7 +131,7 @@ ON table1.column = table2.column;
 ## ALTER TABLE
 
 ### Thêm cột mới
-```{}
+```sql
 ALTER TABLE table_name
 ADD column_name datatype;
 ```
@@ -141,18 +141,18 @@ ALTER TABLE table_name
 DROP COLUMN column_name;
 ```
 ### Đổi tên
-```{}
+```sql
 ALTER TABLE table_name
 RENAME COLUMN old_column_name TO new_column_name;
 ```
 ### Sửa cột
-```{}
+```sql
 ALTER TABLE table_name
 MODIFY column_name datatype;
 ```
 
 ### MERGE
-```{}
+```sql
 MERGE INTO target_table 
 USING source_table 
 ON search_condition
@@ -177,7 +177,7 @@ MERGE INTO SB_BI.B_SAO_KE_BY_DATE X
 # TIPS & TRICKS
 
 ## DATE
-```{}
+```sql
 SELECT 
 TRUNC(ADD_MONTHS(SYSDATE, -7), 'MONTH'),
 , TRUNC(LAST_DAY(ADD_MONTHS(SYSDATE, -1)))+86399/86400
@@ -186,7 +186,7 @@ TRUNC(ADD_MONTHS(SYSDATE, -7), 'MONTH'),
 FROM DUAL;
 ```
 
-```{}
+```sql
 -- CREATE TABLE B_LAST_DAY AS 
 SELECT TRUNC(LAST_DAY(ADD_MONTHS(LAST_DAY('31-dec-2016'), LEVEL))) LAST_DAY
 FROM DUAL
@@ -200,11 +200,11 @@ SELECT TO_CHAR(SYSDATE, 'YYYY') AS YEAR,
   FROM DUAL;
 ```
 
-```{}
+```sql
  SELECT TO_CHAR(SYSDATE, 'DD-MM-YYYY') FROM dual;
 ```
 ## COMPARE TWO TABLE
-```{}
+```sql
 -- all rows that are in T1 but not in T2
 (SELECT /*+ PARALLEL(11) */ * FROM B_TMP MINUS SELECT * FROM B_TMP1) 
 UNION ALL
@@ -213,18 +213,23 @@ UNION ALL
 ;
 ```
 ## PARTITION
-```{}
-SELECT /*+ PARALLEL(11) */
- C.*,
- MIN(FIRST_ACTIVED_DATE) OVER(PARTITION BY CUSTOMER) MIN_BY_CUSTOMER,
- FIRST_VALUE(FIRST_ACTIVED_DATE) IGNORE NULLS OVER(PARTITION BY CUSTOMER ORDER BY FIRST_ACTIVED_DATE ASC) FIRST_BY_CUSTOMER, -- EQUAL MIN IF NOT NULL
- MAX(FIRST_ACTIVED_DATE) OVER(PARTITION BY CUSTOMER) MAX_BY_CUSTOMER,
- LAST_VALUE(FIRST_ACTIVED_DATE) IGNORE NULLS OVER(PARTITION BY CUSTOMER ORDER BY FIRST_ACTIVED_DATE ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING ) LAST_BY_CUSTOMER -- EQUAL MAX IF NOT NULL -- NOTE ORDER
-  FROM B_RT_CARD C;
+```sql
+SELECT MIN(FIRST_ACTIVED_DATE) OVER (PARTITION BY CUSTOMER) MIN_BY_CUSTOMER
+	,FIRST_VALUE(FIRST_ACTIVED_DATE) IGNORE NULLS OVER (
+		PARTITION BY CUSTOMER ORDER BY FIRST_ACTIVED_DATE ASC
+		) FIRST_BY_CUSTOMER
+	,-- EQUAL MIN IF NOT NULL
+	MAX(FIRST_ACTIVED_DATE) OVER (PARTITION BY CUSTOMER) MAX_BY_CUSTOMER
+	,LAST_VALUE(FIRST_ACTIVED_DATE) IGNORE NULLS OVER (
+		PARTITION BY CUSTOMER ORDER BY FIRST_ACTIVED_DATE ASC ROWS BETWEEN UNBOUNDED PRECEDING
+				AND UNBOUNDED FOLLOWING
+		) LAST_BY_CUSTOMER -- EQUAL MAX IF NOT NULL -- NOTE ORDER
+;
+
 ```
 
 ## Check size of tables
-```{}
+```sql
 SELECT /* Segment size - Total */
  OWNER,
  SEGMENT_NAME,
@@ -238,18 +243,18 @@ SELECT /* Segment size - Total */
 ```
 
 ## RUN PROCEDURE
-```{}
+```sql
 begin 
     b_tid_trans_daily;
 end;
 ```
 
 ## CODE đang chạy
-```{}
+```sql
 SELECT * FROM RN;
 ```
 ## KIEM TRA PHAN QUYEN
-```{}
+```sql
 SELECT regexp_substr(ATTRVAL,'[^=]+$') login_id, dn.*, attr.*
 FROM exa_opss.jps_attrs attr, exa_opss.jps_dn dn
 WHERE attr.jps_dn_entryid = dn.entryid
@@ -262,7 +267,7 @@ ORDER BY attrval, rdn;
 
 ## Running job
 
-```{}
+```sql
 select * from all_scheduler_jobs
 WHERE JOB_NAME LIKE 'B_%';
 -- stop 
@@ -271,17 +276,17 @@ EXEC DBMS_SCHEDULER.STOP_JOB (job_name => 'B_DAILY_ALL_PROCEDURES_JOB');
 
 ## KIỂM TRA DUNG LƯỢNG Ổ CỨNG CÒN LẠI
 
-```{}
+```sql
 SELECT SUM(bytes) / 1024 / 1024 mb FROM dba_segments WHERE owner = 'SB_BI';
 ```
 ## GRANT PACKAGE
 
-```{}
+```sql
 GRANT EXECUTE ON LOAN TO VHCN_PTKD_BI;
 ```
 
 ## TO_CHAR
-```{}
+```sql
 alter session set nls_territory = 'UNITED KINGDOM';
 SELECT TO_CHAR(SYSDATE - 3, 'D') FROM dual; -- monday = 1 - sunday = 7 - saturday = 6
 alter session set nls_territory = 'AMERICA';
@@ -289,7 +294,7 @@ SELECT TO_CHAR(SYSDATE - 3, 'D') FROM dual; -- monday = 2 - sunday = 1 - saturda
 ```
 ## GROUP MULTIPLE ROWS
 
-```{}
+```sql
 SELECT LC.LIMIT_ID
       ,LISTAGG(LC.LIMIT_ID, ',') WITHIN GROUP(ORDER BY LC.COLLATERAL_ID) GRP_COLLATERAL_ID
   FROM SB_DTM.MAP_LIMIT_COLLA LC
@@ -298,7 +303,7 @@ SELECT LC.LIMIT_ID
 ```
 
 ## LOOP
-```{}
+```sql
 TRUNCATE TABLE B_TMP_NPH_ALL_PRODUCTHOLDING;
 ------------------------------------------- 
 DECLARE
@@ -320,7 +325,7 @@ END;
 /
 ```
 
-```{}
+```sql
 BEGIN
   FOR r_product IN (
         SELECT 
@@ -337,7 +342,7 @@ BEGIN
 END;
 ```
 ## PIVOT
-```{}
+```sql
 SELECT * FROM
 (
   SELECT customer_ref, product_id
@@ -349,4 +354,12 @@ PIVOT
   FOR product_id IN (10, 20, 30)
 )
 ORDER BY customer_ref;
+```
+
+## PARALEL
+
+```sql
+ INSERT /*+APPEND PARALLEL(8)*/ INTO 
+ MERGE /*+ parallel(8) */ INTO
+ SELECT /*+ PARALLEL(8) */ * FROM 
 ```
